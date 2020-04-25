@@ -1,0 +1,131 @@
+@charset "UTF-8";
+/*去除默认样式 begin*/
+html{
+	font-family: sans-serif;
+	font-size: 14px;
+}
+html,body,header,section,footer,div,ul,ol,li,img,a,span,em,del,legend,center,strong,var,fieldset,form,label,dl,dt,dd,cite,input,hr,time,mark,code,figcaption,figure,textarea,h1,h2,h3,h4,h5,h6,p{
+	margin:0;
+	border:0;
+	padding:0;
+	font-style:normal;
+}
+html,body {
+	-webkit-touch-callout:none;
+	-webkit-text-size-adjust:none;
+	-webkit-tap-highlight-color:rgba(0, 0, 0, 0);
+	-webkit-user-select:none;
+	background-color: #fff;
+  height: 100%;
+  overflow: hidden;
+}
+nav,article,aside,details,main,header,footer,section,fieldset,figcaption,figure{
+	display: block;
+}
+img,a,button,em,del,strong,var,label,cite,small,time,mark,code,textarea{
+	display:inline-block;
+}
+header,section,footer {
+	position:relative;
+}
+ol,ul{
+	list-style:none;
+}
+input,button,textarea {
+	border:0;
+	margin:0;
+	padding:0;
+	font-size:14px;
+	line-height:14px;
+	-webkit-appearance:none;
+	background-color:rgba(0, 0, 0, 0);
+}
+input,textarea {
+	outline:none;
+}
+input[type=search]::-webkit-search-cancel-button{
+    -webkit-appearance: none;
+}
+textarea {
+	resize: none;
+}
+input[type="text"]:focus,
+input[type="password"]:focus {
+	border: 0;
+	background-color:rgba(0, 0, 0, 0);
+	outline: none;
+}
+span{
+	display:inline-block;
+}
+a:active, a:hover {
+  outline: 0;
+}
+a, a:visited{
+	text-decoration:none;
+}
+
+label, .wordWrap{
+    word-wrap: break-word;
+    word-break: break-all;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+td,th {
+  padding: 0;
+}
+/*去除默认样式 end*/
+
+/*公共样式 begin*/
+/*清除浮动*/
+[v-cloak] {
+	display: none;
+}
+
+img {
+	display: inline-block;
+	width: 100%;
+}
+.clearfix:after{
+	content: ' ';
+	display: block;
+	clear: both;
+	visibility:hidden;
+	line-height: 0;
+	height:0;
+}
+
+/*自动隐藏文字*/
+.ellipsis-1 {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.ellipsis-2 {
+	display: -webkit-box;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	word-wrap: break-word;
+	word-break: break-all;
+	white-space: normal !important;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+/*遮罩层*/
+.my-mask {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 8;
+    -webkit-transition: opacity .3s,-webkit-transform .3s;
+    transition: opacity .3s,transform .3s;
+}
+
+.fr {float: right;}
+.fl {float: left;}
