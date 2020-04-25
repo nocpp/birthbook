@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" v-cloak>
     <van-nav-bar title="生日记录本" @click-right="onClickRight">
       <van-dropdown-menu slot='left'>
         <van-dropdown-item v-model="type" :options="option1" />
@@ -9,19 +9,23 @@
     
     <div class="data-list">
       <div>
-        <van-swipe-cell v-for="(item, index) in showList" :key="item.name" class="van-hairline--bottom">
+        <van-swipe-cell v-for="(item, index) in showList" :key="index" class="van-hairline--bottom">
           <div class="list-content">
             <div class="user-info">
               <h3>{{item.name}} <span class="info-detail">属{{item.signZodiac}} {{item.constellation}}</span></h3>
               <p class="age">年龄: {{item.age}} 岁</p>
-              <p>生日: {{item.birthday}}</p>
+              <p>生日: {{item.birthday}} <span style="color: #417505;">{{item.isOld ? '(农历)' : '(新历)'}}</span></p>
             </div>
             <div class="birth-info">
-              <div v-if="item.diffTime > 0"><span class="day">{{item.diffTime}}</span>天后生日</div>
+              <div class="happy-birthday"  v-if="item.diffTime === 'happy'">
+                <img src="./assets/img/cake.png" alt="">今天生日
+              </div>
+              <div v-else-if="item.diffTime > 0"><span class="day">{{item.diffTime}}</span>天后生日</div>
               <div class="out-date" v-else>生日已过</div>
             </div>
           </div>
           <template #right>
+            <van-button square type="primary" text="编辑" class="handle-btn" @click="editInfo(index)"/>
             <van-button square type="danger" text="删除" class="handle-btn" @click="deleteInfo(index)"/>
           </template>
         </van-swipe-cell>
@@ -30,7 +34,7 @@
     </div>
     
     <div class="input-area" v-show="isShow">
-      <div class="title van-hairline--bottom">添加生日</div>
+      <div class="title van-hairline--bottom">{{mode === 'add' ? '添加' : '编辑'}}生日</div>
       <div class="input-wrap">
         <div class="name">
           <label>
@@ -41,11 +45,17 @@
         <div class="date">
           <label>
             <span>生日：</span>
-            <input type="text" placeholder="请选择生日" v-model="birthday" @click="dateShow = true" readonly>
+            <input type="text" placeholder="请选择生日" v-model="birthday" @click="openPicker" readonly>
           </label>
         </div>
+        <div class="old-new">
+          <van-radio-group v-model="radio" direction="horizontal">
+            <van-radio name="1">新历</van-radio>
+            <van-radio name="2">农历</van-radio>
+          </van-radio-group>
+        </div>
       </div>
-      <van-button type="info" class="save-btn" @click="addInfo">保存</van-button>
+      <van-button type="info" class="save-btn" @click="handleSave">保存</van-button>
       <div class="icon-wrap" @click="isShow = false">
         <van-icon name="close" />
       </div>
@@ -68,7 +78,20 @@
   import Vue from 'vue';
   import {calendar} from '@/assets/js/calendar.js'
   import BetterScroll from 'better-scroll';
-  import { NavBar, Icon, DropdownMenu, DropdownItem, SwipeCell, Button, Toast, DatetimePicker, Popup} from 'vant';
+  import { 
+    NavBar, 
+    Icon, 
+    DropdownMenu, 
+    DropdownItem, 
+    SwipeCell, 
+    Button, 
+    Toast, 
+    DatetimePicker, 
+    Popup, 
+    RadioGroup, 
+    Radio,
+    Dialog
+  } from 'vant';
   
   Vue.use(NavBar);
   Vue.use(Icon);
@@ -79,6 +102,9 @@
   Vue.use(Toast);
   Vue.use(DatetimePicker);
   Vue.use(Popup);
+  Vue.use(RadioGroup);
+  Vue.use(Radio);
+  Vue.use(Dialog);
   
   export default {
       data() {
@@ -96,7 +122,10 @@
           minDate: new Date(1910, 0, 1),
           maxDate: new Date(),
           currentDate: new Date(1995, 0, 1),
-          dateShow: false
+          dateShow: false,
+          radio: "2",
+          mode: 'add', //add是添加, edit是编辑
+          editIndex: -1 //要编辑的索引
         };
       },
       
@@ -105,22 +134,29 @@
           const theList = this.list.map(item => {
             const date = item.birthday;
             const dateArr = date.split('-');
-            const c_day = calendar.lunar2solar(dateArr[0], dateArr[1], dateArr[2]);
+            
+            let c_day;
+            if (item.isOld) { //如果是农历
+              c_day = calendar.lunar2solar(dateArr[0], dateArr[1], dateArr[2]);
+            } else {
+              c_day = calendar.solar2lunar(dateArr[0], dateArr[1], dateArr[2]);
+            }
            
             return {
               name: item.name,
               birthday: item.birthday,
               constellation: c_day.astro,
               signZodiac: c_day.Animal,
-              age: this.calcAge(item.birthday),
-              diffTime: this.calcDayByDate(item.birthday)
+              age: this.calcAge(item.birthday, item.isOld),
+              diffTime: this.calcDayByDate(item.birthday, item.isOld),
+              isOld: item.isOld
             }
           });
           
           if (this.type === 1) {
             return theList;
           } else if (this.type === 2) {
-            return theList.filter(item => item.diffTime > 0);
+            return theList.filter(item => item.diffTime > 0 || item.diffTime === 'happy');
           } else {
             return theList.filter(item => item.diffTime <= 0);
           }
@@ -131,6 +167,8 @@
         onClickRight() {
             this.name = '';
             this.birthday = '';
+            this.radio = '2';
+            this.mode = 'add';
             this.isShow = true;
         },
         
@@ -142,13 +180,39 @@
         },
         
         cancelTime() {
+          this.editIndex = -1;
           this.dateShow = false;
+        },
+        
+        /**
+         * 打开时间选择
+         */
+        openPicker() {
+          if (this.editIndex !== -1) {
+            const birthday = (this.showList[this.editIndex].birthday).split('-');
+            this.currentDate = new Date(birthday[0], birthday[1] - 1, birthday[2]);
+          } else {
+            this.currentDate = new Date(1995, 0, 1);
+          }
+          
+          this.dateShow = true;
+        },
+        
+        /**
+         * 点击保存
+         */
+        handleSave() {
+          if (this.mode === 'add') {
+            this.addInfo();
+          } else {
+            this.saveEditInfo();
+          }
         },
         
         /**
          * 计算年龄
          */
-        calcAge(_day) {
+        calcAge(_day, _isOld) {
           const now = new Date();
           
           const year = now.getFullYear();
@@ -157,9 +221,15 @@
 
           const theyTime = _day.split('-');
           
-          const c_day = calendar.lunar2solar(year, theyTime[1], theyTime[2]);
-          const new_day = c_day.date;
-          const new_day_arr = new_day.split('-');
+          let new_day_arr; //今年生日
+          
+          if (_isOld) { //如果是农历，转成阳历再计算
+            const c_day = calendar.lunar2solar(year, theyTime[1], theyTime[2]);
+            const new_day = c_day.date;
+            new_day_arr = new_day.split('-');
+          } else {
+            new_day_arr = [year, theyTime[1], theyTime[2]];
+          }
           
           const [t_year, t_month, t_date] = new_day_arr; //生日新历年月日
           
@@ -187,7 +257,7 @@
         /**
          * 计算时间差
          */
-        calcDayByDate(_date) {
+        calcDayByDate(_date, _isOld) {
           const now = new Date();
           
           const year = now.getFullYear();
@@ -197,18 +267,78 @@
           
           const dateArr = _date.split('-');
           
-          const c_day = calendar.lunar2solar(year, dateArr[1], dateArr[2]);
+          let c_day;
           
-          const thatTime = new Date(c_day.date).getTime();
+          if (_isOld) {
+            c_day = calendar.lunar2solar(year, dateArr[1], dateArr[2]);
+            c_day = c_day.date;
+          } else {
+            c_day = year + '-' + dateArr[1] + '-' + dateArr[2];
+          }
           
-          let timeDay = Math.ceil((((((thatTime - nowTime) / 1000) / 60) / 60) / 24));
+          const thisDay = c_day.split('-');
           
-          return timeDay;
+          if (month === thisDay[1]*1 && date === thisDay[2]*1) {
+            return 'happy';
+          } else {
+            const thatTime = new Date(c_day).getTime();
+            let timeDay = Math.ceil((((((thatTime - nowTime) / 1000) / 60) / 60) / 24));
+            return timeDay;
+          }
         },
         
         deleteInfo(_index) {
-          this.list.splice(_index, 1);
-          this.setStorage('dataLst', this.list);
+          const self = this;
+          Dialog.confirm({
+            title: '提示',
+            message: '确认删除吗？',
+          }).then(() => {
+              self.list.splice(_index, 1);
+              self.setStorage('dataList', self.list);
+            }).catch(() => {
+              
+            });
+        },
+        
+        /**
+         * 编辑功能
+         */
+        editInfo(_index) {
+          this.editIndex = _index;
+          this.name = this.showList[_index].name;
+          this.birthday = this.showList[_index].birthday;
+          this.radio = this.showList[_index].isOld ? '2' : '1';
+          this.mode = 'edit';
+          this.isShow = true;
+        },
+        
+        /**
+         * 编辑保存
+         */
+        saveEditInfo() {
+          if (!this.name || !this.birthday) {
+            Toast('请先输入资料');
+            return;
+          }
+          
+          const data = {
+            name: this.name,
+            birthday: this.birthday,
+            isOld: this.radio * 1 === 2 //是否是农历
+          };
+          
+          Vue.set(this.list, this.editIndex, data);
+
+          this.setStorage('dataList', this.list);
+          
+          this.isShow = false;
+          this.name = '';
+          this.birthday = '';
+          this.mode = 'add';
+          this.editIndex = -1;
+          this.radio = '2';
+          
+          Toast.success('保存成功');
         },
         
         addInfo() {
@@ -219,14 +349,17 @@
           
           const data = {
             name: this.name,
-            birthday: this.birthday
+            birthday: this.birthday,
+            isOld: this.radio * 1 === 2 //是否是农历
           };
           
           this.list.push(data);
-          this.setStorage('dataLst', this.list);
+          this.setStorage('dataList', this.list);
           this.isShow = false;
           this.name = '';
           this.birthday = '';
+          this.radio = '2';
+          this.editIndex = -1;
           
           Toast.success('保存成功');
         },
@@ -241,9 +374,9 @@
       },
       
       mounted() {
-        const dataLst = this.getStorage('dataLst');
-        if (dataLst) {
-          this.list = dataLst;
+        const dataList = this.getStorage('dataList');
+        if (dataList) {
+          this.list = dataList;
         }
         
         this.$nextTick(() => {
@@ -309,13 +442,27 @@
           font-weight: bold;
           line-height: 60px;
         }
+        .happy-birthday {
+          font-size: 26px;
+          font-weight: bold;
+          line-height: 60px;
+          color: #f4b144;
+          padding-top: 12px;
+          img {
+            position: relative;
+            top: -5px;
+            width: 50px;
+            display: inline-block;
+            vertical-align: middle;
+          }
+        }
         .user-info {
             width: 50%;
             p {
               line-height: 1em;
             }
             h3 {
-              font-size: 22px;
+              font-size: 20px;
               line-height: 1em;
               color: #4286F5;
               margin-bottom: 10px;
@@ -326,8 +473,10 @@
             }
         }
         .birth-info {
+          width: 50%;
+          text-align: center;
           .day {
-            font-size: 50px;
+            font-size: 46px;
             font-weight: bold;
             color: #34A853;
             margin-right: 6px;
@@ -370,6 +519,13 @@
             line-height: 30px;
             font-size: 16px;
             width: 70%;
+          }
+        }
+        .old-new {
+          padding-top: 20px;
+          border-bottom: 0;
+          .van-radio-group {
+            justify-content: center;
           }
         }
       }
