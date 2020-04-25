@@ -1,19 +1,6 @@
 # birthdaybook
 
-## Project setup
-```
-npm install
-```
+## Project Desc
+  用来记录亲戚朋友生日的移动端小工具，用Vue cli4搭建，UI使用vant组件，
+使用农历生日。
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
