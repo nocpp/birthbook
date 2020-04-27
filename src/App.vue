@@ -21,7 +21,10 @@
                 <img src="./assets/img/cake.png" alt="">今天生日
               </div>
               <div v-else-if="item.diffTime > 0"><span class="day">{{item.diffTime}}</span>天后生日</div>
-              <div class="out-date" v-else>生日已过</div>
+              <div class="out-date" v-else>
+                <p>生日已过</p>
+                <p class="next-birth">下个生日还有 <span class="day">{{item.nextDay}}</span>天</p>
+              </div>
             </div>
           </div>
           <template #right>
@@ -75,7 +78,7 @@
 </template>
 
 <script>
-  import Vue from 'vue';
+  import Vue from 'vue'
   import {calendar} from '@/assets/js/calendar.js'
   import BetterScroll from 'better-scroll';
   import { 
@@ -141,6 +144,8 @@
             } else {
               c_day = calendar.solar2lunar(dateArr[0], dateArr[1], dateArr[2]);
             }
+            
+            const diffTime = this.calcDayByDate(item.birthday, item.isOld);
            
             return {
               name: item.name,
@@ -148,7 +153,8 @@
               constellation: c_day.astro,
               signZodiac: c_day.Animal,
               age: this.calcAge(item.birthday, item.isOld),
-              diffTime: this.calcDayByDate(item.birthday, item.isOld),
+              diffTime: diffTime.timeDay,
+              nextDay: diffTime.nextDay,
               isOld: item.isOld
             }
           });
@@ -279,11 +285,31 @@
           const thisDay = c_day.split('-');
           
           if (month === thisDay[1]*1 && date === thisDay[2]*1) {
-            return 'happy';
+            return {
+              timeDay: 'happy',
+              nextDay: ''
+            };
           } else {
             const thatTime = new Date(c_day).getTime();
             let timeDay = Math.ceil((((((thatTime - nowTime) / 1000) / 60) / 60) / 24));
-            return timeDay;
+            let nextDay = ''; //下个生日
+            
+            if (timeDay < 0) { //如果生日过了就计算明年的
+              if (_isOld) {
+                c_day = calendar.lunar2solar(year + 1, dateArr[1], dateArr[2]);
+                c_day = c_day.date;
+              } else {
+                c_day = (year + 1) + '-' + dateArr[1] + '-' + dateArr[2];
+              }
+              
+              const nextTime = new Date(c_day).getTime();
+              nextDay = Math.ceil((((((nextTime - nowTime) / 1000) / 60) / 60) / 24));
+            }
+            
+            return {
+              timeDay,
+              nextDay
+            };
           }
         },
         
@@ -379,6 +405,10 @@
           this.list = dataList;
         }
         
+        document.addEventListener("plusready", function() {
+          plus.navigator.setStatusBarBackground("#8d8def");
+        }, false);
+        
         this.$nextTick(() => {
           new BetterScroll('.data-list');
         });
@@ -437,10 +467,18 @@
         box-sizing: border-box;
         display: flex;
         .out-date {
+          padding-top: 10px;
           color: #888;
           font-size: 26px;
           font-weight: bold;
-          line-height: 60px;
+          .next-birth {
+            margin-top: 6px;
+            font-size: 14px;
+            font-weight: normal;
+            .day {
+              font-size: 16px;
+            }
+          }
         }
         .happy-birthday {
           font-size: 26px;
@@ -490,6 +528,10 @@
     
     [class*=van-hairline]::after {
       border-color: #ccc;
+    }
+    
+    .van-nav-bar__left [class*=van-hairline]::after {
+      border-color: #8d8def !important;
     }
     
     .input-area {
