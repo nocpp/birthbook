@@ -1,0 +1,174 @@
+#app .van-nav-bar {
+  background-color: #8d8def;
+}
+#app .van-nav-bar .van-nav-bar__title {
+  color: #fff;
+}
+#app .van-nav-bar .van-icon-plus {
+  color: #fff !important;
+  font-size: 20px;
+}
+#app .van-nav-bar .van-dropdown-menu {
+  height: 46px;
+  line-height: 46px;
+  background-color: #8d8def;
+}
+#app .van-nav-bar .van-dropdown-menu .van-dropdown-menu__title {
+  color: #fff;
+}
+#app .van-nav-bar .van-nav-bar__left {
+  padding-left: 6px;
+}
+#app .info-detail {
+  color: #417505;
+  font-size: 14px;
+  font-weight: normal;
+  margin-left: 6px;
+}
+#app .data-list {
+  position: absolute;
+  top: 46px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+}
+#app .data-list .tips {
+  color: #666;
+  line-height: 30px;
+  text-align: center;
+  padding: 20px 0;
+  font-size: 16px;
+}
+#app .data-list .list-content {
+  padding: 20px;
+  height: 130px;
+  box-sizing: border-box;
+  display: flex;
+}
+#app .data-list .list-content .out-date {
+  padding-top: 10px;
+  color: #888;
+  font-size: 26px;
+  font-weight: bold;
+}
+#app .data-list .list-content .out-date .next-birth {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: normal;
+}
+#app .data-list .list-content .out-date .next-birth .day {
+  font-size: 16px;
+}
+#app .data-list .list-content .happy-birthday {
+  font-size: 26px;
+  font-weight: bold;
+  line-height: 60px;
+  color: #f4b144;
+  padding-top: 12px;
+}
+#app .data-list .list-content .happy-birthday img {
+  position: relative;
+  top: -5px;
+  width: 50px;
+  display: inline-block;
+  vertical-align: middle;
+}
+#app .data-list .list-content .user-info {
+  width: 50%;
+}
+#app .data-list .list-content .user-info p {
+  line-height: 1em;
+}
+#app .data-list .list-content .user-info h3 {
+  font-size: 20px;
+  line-height: 1em;
+  color: #4286F5;
+  margin-bottom: 10px;
+  margin-top: 6px;
+}
+#app .data-list .list-content .user-info .age {
+  margin-bottom: 10px;
+}
+#app .data-list .list-content .birth-info {
+  width: 50%;
+  text-align: center;
+}
+#app .data-list .list-content .birth-info .day {
+  font-size: 46px;
+  font-weight: bold;
+  color: #34A853;
+  margin-right: 6px;
+}
+#app .data-list .handle-btn {
+  height: 100%;
+}
+#app [class*=van-hairline]::after {
+  border-color: #ccc;
+}
+#app .van-nav-bar__left [class*=van-hairline]::after {
+  border-color: #8d8def !important;
+}
+#app .input-area {
+  position: fixed;
+  top: 26%;
+  left: 5%;
+  width: 90%;
+  background-color: #fff;
+  z-index: 999;
+  padding: 10px 20px;
+  padding-top: 0;
+  box-sizing: border-box;
+  border-radius: 6px;
+}
+#app .input-area .title {
+  text-align: center;
+  font-size: 18px;
+  line-height: 60px;
+}
+#app .input-area .input-wrap {
+  padding: 0 10px;
+}
+#app .input-area .input-wrap > div {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 16px;
+}
+#app .input-area .input-wrap > div input {
+  display: inline-block;
+  line-height: 30px;
+  font-size: 16px;
+  width: 70%;
+}
+#app .input-area .input-wrap .old-new {
+  padding-top: 20px;
+  border-bottom: 0;
+}
+#app .input-area .input-wrap .old-new .van-radio-group {
+  justify-content: center;
+}
+#app .input-area .save-btn {
+  display: block !important;
+  width: 50%;
+  margin: 0 auto;
+  margin-top: 30px;
+  margin-bottom: 20px;
+  height: 36px;
+  line-height: 36px;
+}
+#app .input-area .icon-wrap {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+}
+#app .input-area .icon-wrap .van-icon-close {
+  color: #ddd;
+  font-size: 30px;
+}
+#app .van-datetime-picker {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 99;
+}

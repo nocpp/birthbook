@@ -32,7 +32,7 @@
             <van-button square type="danger" text="删除" class="handle-btn" @click="deleteInfo(index)"/>
           </template>
         </van-swipe-cell>
-        <div class="tips" v-show="list.length === 0">暂时没有数据，快去添加吧~</div>
+        <div class="tips" v-show="showList.length === 0">暂时没有数据，快去添加吧~</div>
       </div>
     </div>
     
@@ -68,10 +68,20 @@
      <van-datetime-picker
         v-model="currentDate"
         type="date"
+        title="请选择新历"
         :min-date="minDate"
         :max-date="maxDate"
         @confirm="choseTime"
         @cancel="cancelTime"
+        v-if="radio === '1'"
+      />
+      <van-picker 
+        show-toolbar
+        title="请选择农历"
+        :columns="lunarData" 
+        @confirm="choseTime"
+        @cancel="cancelTime"
+        v-else
       />
     </van-popup>
   </div>
@@ -93,7 +103,8 @@
     Popup, 
     RadioGroup, 
     Radio,
-    Dialog
+    Dialog,
+    Picker
   } from 'vant';
   
   Vue.use(NavBar);
@@ -108,6 +119,7 @@
   Vue.use(RadioGroup);
   Vue.use(Radio);
   Vue.use(Dialog);
+  Vue.use(Picker);
   
   export default {
       data() {
@@ -116,6 +128,7 @@
             { text: '全部', value: 1 },
             { text: '未过', value: 2 },
             { text: '已过', value: 3 },
+            { text: '增序', value: 4 }
           ],
           isShow: false,
           list: [],
@@ -128,43 +141,28 @@
           dateShow: false,
           radio: "2",
           mode: 'add', //add是添加, edit是编辑
-          editIndex: -1 //要编辑的索引
+          editIndex: -1, //要编辑的索引
+          lunarData: []
         };
       },
       
       computed: {
         showList() {
-          const theList = this.list.map(item => {
-            const date = item.birthday;
-            const dateArr = date.split('-');
-            
-            let c_day;
-            if (item.isOld) { //如果是农历
-              c_day = calendar.lunar2solar(dateArr[0], dateArr[1], dateArr[2]);
-            } else {
-              c_day = calendar.solar2lunar(dateArr[0], dateArr[1], dateArr[2]);
-            }
-            
-            const diffTime = this.calcDayByDate(item.birthday, item.isOld);
-           
-            return {
-              name: item.name,
-              birthday: item.birthday,
-              constellation: c_day.astro,
-              signZodiac: c_day.Animal,
-              age: this.calcAge(item.birthday, item.isOld),
-              diffTime: diffTime.timeDay,
-              nextDay: diffTime.nextDay,
-              isOld: item.isOld
-            }
-          });
-          
-          if (this.type === 1) {
-            return theList;
-          } else if (this.type === 2) {
-            return theList.filter(item => item.diffTime > 0 || item.diffTime === 'happy');
-          } else {
-            return theList.filter(item => item.diffTime <= 0);
+          const theList = this.list;
+          switch (this.type) {
+            case 1:
+              return theList;
+            break;
+            case 2:
+              return theList.filter(item => item.diffTime > 0 || item.diffTime === 'happy');
+            break;
+            case 3:
+              return theList.filter(item => item.diffTime <= 0);
+            break;
+            case 4:
+              const ret = theList.sort((fr, se) => fr.diffTime - se.diffTime);
+              return ret.filter(item => item.diffTime > 0 || item.diffTime === 'happy');
+            break;
           }
         }
       },
@@ -353,7 +351,7 @@
             isOld: this.radio * 1 === 2 //是否是农历
           };
           
-          Vue.set(this.list, this.editIndex, data);
+          Vue.set(this.list, this.editIndex, this.dataFormat(data));
 
           this.setStorage('dataList', this.list);
           
@@ -365,6 +363,32 @@
           this.radio = '2';
           
           Toast.success('保存成功');
+        },
+        
+        //添加数据转换
+        dataFormat(item) {
+          const date = item.birthday;
+          const dateArr = date.split('-');
+          
+          let c_day;
+          if (item.isOld) { //如果是农历
+            c_day = calendar.lunar2solar(dateArr[0], dateArr[1], dateArr[2]);
+          } else {
+            c_day = calendar.solar2lunar(dateArr[0], dateArr[1], dateArr[2]);
+          }
+          
+          const diffTime = this.calcDayByDate(item.birthday, item.isOld);
+                     
+          return {
+            name: item.name,
+            birthday: item.birthday,
+            constellation: c_day.astro,
+            signZodiac: c_day.Animal,
+            age: this.calcAge(item.birthday, item.isOld),
+            diffTime: diffTime.timeDay,
+            nextDay: diffTime.nextDay,
+            isOld: item.isOld
+          };
         },
         
         addInfo() {
@@ -379,7 +403,7 @@
             isOld: this.radio * 1 === 2 //是否是农历
           };
           
-          this.list.push(data);
+          this.list.push(this.dataFormat(data));
           this.setStorage('dataList', this.list);
           this.isShow = false;
           this.name = '';
@@ -396,14 +420,52 @@
         
         getStorage(_key) {
           return JSON.parse(localStorage.getItem(_key));
+        },
+        
+        lunarDataInit() {
+          const yearData = [];
+          const monthData = [];
+          const dateData = [];
+          const nowYear = new Date().getFullYear();
+          
+          for (let i = 1910; i < nowYear + 1; i++) {
+            yearData.push(i);
+          }
+          
+          for (let i = 1; i < 13; i++) {
+            monthData.push(i < 10 ? '0' + i : i);
+          }
+          
+          for (let i = 1; i < 31; i++) {
+            dateData.push(i < 10 ? '0' + i : i);
+          }
+          
+          this.lunarData = [
+            {
+              values: yearData,
+              defaultIndex: 80
+            },
+            {
+              values: monthData,
+              defaultIndex: 0
+            },
+            {
+              values: dateData,
+              defaultIndex: 0
+            }
+          ];
         }
       },
       
       mounted() {
-        const dataList = this.getStorage('dataList');
+        let dataList = this.getStorage('dataList');
         if (dataList) {
+          dataList.forEach(item => {
+            item = this.dataFormat(item);
+          });
           this.list = dataList;
         }
+        this.lunarDataInit();
         
         document.addEventListener("plusready", function() {
           plus.navigator.setStatusBarBackground("#8d8def");
