@@ -460,9 +460,9 @@
       mounted() {
         let dataList = this.getStorage('dataList');
         if (dataList) {
-          dataList.forEach(item => {
-            item = this.dataFormat(item);
-          });
+          for (let i = 0; i < dataList.length; i++) {
+            dataList[i] = this.dataFormat(dataList[i]);
+          }
           this.list = dataList;
         }
         this.lunarDataInit();
